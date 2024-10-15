@@ -8,3 +8,17 @@ body,
 html {
   height: 100%;
 }
+
+.legend {
+  background-color: white;
+  padding: 10px;
+  border: 1px solid black;
+  font-size: 14px;
+  color: black;
+}
+
+.legend-rectangle {
+  width: 20px;
+  height: 10px;
+  display: inline-block;
+}
