@@ -1,11 +1,27 @@
 // Set the earthquake data endpoint
-const url = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_month.geojson"
+const url_all = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_month.geojson"
+const url_strong = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_month.geojson"
+
+let overlayMaps = {};
 
 /* Request the JSON data, then call the createFeatures function on the data.features object
-once the request has been resolved*/
+once the request has been resolved
 d3.json(url).then(function (data) {
   createFeatures(data.features);
-})
+})*/
+
+/* Make two requests, obtain two data promises, then use Javascript's 'array destructuring' to
+unpack the two promises and pass each individually to the callback function*/
+Promise.all([
+  d3.json(url_all),
+  d3.json(url_strong)
+]).then(function ([dataAll, dataStrong]) {
+  overlayMaps["USGS All Earthquakes, Past Month"] = createFeatures(dataAll.features);
+  overlayMaps["USGS Magnitude 4.5+ Earthquakes, Past Month"] = createFeatures(dataStrong.features);
+  L.control.layers(baseMaps, overlayMaps, {
+    collapsed: false
+  }).addTo(myMap);
+});
 
 // Add a default tile layer
 let globalMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -53,7 +69,7 @@ info.addTo(myMap);
 
 // Custom function to scale the marker size using the earthquake magnitude
 function markerSize(data) {
-  return Math.pow(data, 2);
+  return Math.pow(data, 5) * 0.005;
 }
 
 // Custom function to select marker color using the earthquake depth
@@ -72,7 +88,7 @@ function markerColor(data) {
 };
 
 /* Function for creating markers for each earthquake, using L.geoJSON,
-then applying a popup and click behavior, using onEachFeature*/
+then applying a popup, using onEachFeature*/
 function createFeatures(dataFeatures) {
   
   function onEachFeature(feature, layer) {
@@ -92,8 +108,6 @@ function createFeatures(dataFeatures) {
 
   let earthquakesLayer = L.geoJSON(dataFeatures, {
     pointToLayer: function (feature) {
-      let coordinates = feature.geometry.coordinates;
-
       return L.circleMarker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], {
         stroke: false,
         fillOpacity: 0.75,
@@ -105,15 +119,20 @@ function createFeatures(dataFeatures) {
     onEachFeature: onEachFeature,
   });
 
-  // Define variable to contain the overlay layer
+  return earthquakesLayer;
+
+  /* Define a variable to contain the overlay layer.
+  In the updated code version with two overlay layers, defining the overlay layers was
+  moved to directly within the callback function.
   let overlayMaps = {
     "USGS Magnitude 4.5+ Earthquakes, Past Month": earthquakesLayer
-  };
+  };*/
 
-  // Pass all layers into layer control, add layer control to map
+  /* Pass all layers into layer control, add layer control to map.
+  In the updated code version, this was also moved into the callback function.
   L.control.layers(baseMaps, overlayMaps, {
     collapsed: false
-  }).addTo(myMap);
+  }).addTo(myMap);*/
 };
 
 
